@@ -15,15 +15,15 @@ REM ------------------------------------
 DEFAULT_DELAY 200
 
 REM ---------- Open PowerShell as Admin ----------
-REM Press Windows Key + X
-GUI x
-DELAY 20
-STRING a
 DELAY 500
-LEFTARROW
-DELAY 50
+GUI r
+DELAY 500
+STRING powershell Start-Process powershell -Verb runAs
 ENTER
-DELAY 900
+DELAY 800
+LEFTARROW
+ENTER
+DELAY 500
 
 REM ---------- Enable Windows Firewall ----------
 STRING netsh advfirewall set currentprofile state on
