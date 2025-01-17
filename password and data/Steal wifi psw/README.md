@@ -1,4 +1,4 @@
-# Ruba password wifi
+# Recupera password wifi
 
 Un semplice payload per recuperare le password delle reti salvate nel computer con il vostro flipper zero e inviarle su discord tramite un webhook
 
@@ -6,7 +6,7 @@ Per utilizzarlo bisogna solo sostituire "YOUR_DISCORD_WEBHOOK_TOKEN" con il vost
 
 
 
-# Steal wifi password
+# Recover wifi password
 
 A simple payload to recover the passwords of the networks saved on the computer with your flipper zero and send them to discord via a webhook
 
